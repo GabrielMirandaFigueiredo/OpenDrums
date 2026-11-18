@@ -66,14 +66,15 @@ jobs:
       - name: Package (Windows installer)
         if: runner.os == 'Windows'
         run: |
-          choco install innosetup -y --no-progress
+          choco install innosetup -y --no-progress || true
           mkdir -p dist
+          export MSYS2_ARG_CONV_EXCL="*"   # keep Git Bash from rewriting the /D switches as paths
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
-            "//DAppVersion=${{ steps.ver.outputs.version }}" \
-            "//DBuildDir=$(pwd -W)/build/plugin/OpenDrums_artefacts/$BUILD_TYPE" \
-            "//DRepoDir=$(pwd -W)" \
-            "//DOutDir=$(pwd -W)/dist" \
-            packaging/windows/OpenDrums.iss
+            "/DAppVersion=${{ steps.ver.outputs.version }}" \
+            "/DBuildDir=$(pwd -W)/build/plugin/OpenDrums_artefacts/$BUILD_TYPE" \
+            "/DRepoDir=$(pwd -W)" \
+            "/DOutDir=$(pwd -W)/dist" \
+            "$(pwd -W)/packaging/windows/OpenDrums.iss"
 
       - name: Package (macOS .pkg in a .dmg)
         if: runner.os == 'macOS'

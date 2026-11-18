@@ -1,0 +1,105 @@
+name: Build & package
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to attach installers to a release
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: Windows, os: windows-latest }
+          - { name: macOS,   os: macos-latest }
+          - { name: Linux,   os: ubuntu-22.04 }
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then V="${GITHUB_REF_NAME#v}"
+          else V="$(sed -n 's/^project(OpenDrums VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)-dev"; fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Version: $V"
+
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev \
+            libfreetype6-dev libfontconfig1-dev libgl1-mesa-dev xvfb
+
+      - name: Cache JUCE
+        uses: actions/cache@v4
+        with:
+          path: build/_deps/juce-src
+          key: juce-8.0.6-${{ runner.os }}
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DOPENDRUMS_BUILD_TOOLS=ON
+
+      - name: Build
+        run: cmake --build build --config $BUILD_TYPE --parallel
+
+      - name: Test (core)
+        run: ctest --test-dir build -C $BUILD_TYPE --output-on-failure
+
+      # ---------------------------------------------------------------- packaging
+      - name: Package (Windows installer)
+        if: runner.os == 'Windows'
+        run: |
+          choco install innosetup -y --no-progress
+          mkdir -p dist
+          "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" \
+            "//DAppVersion=${{ steps.ver.outputs.version }}" \
+            "//DBuildDir=$(pwd -W)/build/plugin/OpenDrums_artefacts/$BUILD_TYPE" \
+            "//DRepoDir=$(pwd -W)" \
+            "//DOutDir=$(pwd -W)/dist" \
+            packaging/windows/OpenDrums.iss
+
+      - name: Package (macOS .pkg in a .dmg)
+        if: runner.os == 'macOS'
+        run: bash packaging/macos/build_pkg.sh "${{ steps.ver.outputs.version }}" build/plugin/OpenDrums_artefacts/$BUILD_TYPE dist
+
+      - name: Package (Linux .deb and .tar.gz)
+        if: runner.os == 'Linux'
+        run: bash packaging/linux/build_packages.sh "${{ steps.ver.outputs.version }}" build/plugin/OpenDrums_artefacts/$BUILD_TYPE dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenDrums-${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true

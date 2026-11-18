@@ -171,23 +171,38 @@ void OpenDrumsProcessor::cacheParameters()
     }
 }
 
-juce::File OpenDrumsProcessor::defaultKitsFolder()
+// Where the installers put the bundled kits and grooves (shared by every user of the machine).
+static juce::File sharedDataFolder()
 {
-    const auto env = juce::SystemStats::getEnvironmentVariable("OPENDRUMS_KITS", {});
-    if (env.isNotEmpty() && juce::File(env).isDirectory())
-        return juce::File(env);
-    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("OpenDrums").getChildFile("Kits");
+#if JUCE_WINDOWS || JUCE_MAC
+    return juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("OpenDrums");
+#else
+    return juce::File("/usr/share/opendrums");
+#endif
 }
 
-juce::File OpenDrumsProcessor::defaultGroovesFolder()
+static bool hasSubfolders(const juce::File& f)
 {
-    const auto env = juce::SystemStats::getEnvironmentVariable("OPENDRUMS_GROOVES", {});
+    return f.isDirectory() && f.getNumberOfChildFiles(juce::File::findDirectories) > 0;
+}
+
+// Order: environment variable (development) -> the user's own folder, if it has content -> the installed copy.
+static juce::File resolveDataFolder(const char* envName, const char* leaf)
+{
+    const auto env = juce::SystemStats::getEnvironmentVariable(envName, {});
     if (env.isNotEmpty() && juce::File(env).isDirectory())
         return juce::File(env);
-    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("OpenDrums").getChildFile("Grooves");
+    const auto user = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+                          .getChildFile("OpenDrums").getChildFile(leaf);
+    if (hasSubfolders(user))
+        return user;
+    const auto shared = sharedDataFolder().getChildFile(leaf);
+    return hasSubfolders(shared) ? shared : user;
 }
+
+juce::File OpenDrumsProcessor::defaultKitsFolder() { return resolveDataFolder("OPENDRUMS_KITS", "Kits"); }
+
+juce::File OpenDrumsProcessor::defaultGroovesFolder() { return resolveDataFolder("OPENDRUMS_GROOVES", "Grooves"); }
 
 // ------------------------------------------------------------------ audio
 

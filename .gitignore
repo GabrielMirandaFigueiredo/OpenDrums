@@ -2,3 +2,11 @@ build/
 build-*/
 *.user
 .vs/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+# converted real kits are big: generate them with tools/convert_kit.py instead of committing
+kits/big-rusty-drums/
+kits/unruly-drums/
+kits/muldjord-kit/

@@ -6,8 +6,17 @@ FetchContent_Declare(
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(JUCE)
 
+# AU only exists on macOS
+if(APPLE)
+    set(OPENDRUMS_FORMATS VST3 AU Standalone)
+else()
+    set(OPENDRUMS_FORMATS VST3 Standalone)
+endif()
+
 juce_add_plugin(OpenDrums
     COMPANY_NAME              "OpenDrums"
+    BUNDLE_ID                 "org.opendrums.OpenDrums"
+    AU_MAIN_TYPE              kAudioUnitType_MusicDevice
     PRODUCT_NAME              "OpenDrums"
     PLUGIN_MANUFACTURER_CODE  Odrm
     PLUGIN_CODE               Odr1
@@ -15,7 +24,7 @@ juce_add_plugin(OpenDrums
     NEEDS_MIDI_INPUT          TRUE
     NEEDS_MIDI_OUTPUT         FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
-    FORMATS                   VST3 Standalone
+    FORMATS                   ${OPENDRUMS_FORMATS}
     VST3_CATEGORIES           Instrument Drum
     COPY_PLUGIN_AFTER_BUILD   FALSE)
 

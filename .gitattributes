@@ -1,0 +1,5 @@
+*.wav binary
+*.flac binary
+*.mid binary
+*.sh text eol=lf
+*.iss text eol=crlf

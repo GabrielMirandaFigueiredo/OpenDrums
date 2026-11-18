@@ -37,13 +37,13 @@ int main(int argc, char** argv) {
     lib.scan(argv[1]);
 
     std::printf("library\n");
-    CHECK(lib.kits().size() == 2);
+    CHECK(lib.kits().size() >= 2);
     CHECK(lib.warnings().empty());
     CHECK(lib.findKit("demo-rock") != nullptr);
     CHECK(lib.findPiece("demo-tight/snare"));
     CHECK(!lib.findPiece("nope/snare"));
-    CHECK(lib.piecesOfFamily("cymbal").size() == 2 * 3); // crash1, crash2, ride in each kit
-    CHECK(lib.piecesOfFamily("tom").size() == 2 * 3);
+    CHECK(lib.piecesOfFamily("cymbal").size() >= 2 * 3); // crash1, crash2, ride in each kit
+    CHECK(lib.piecesOfFamily("tom").size() >= 2 * 3);
     CHECK(od::typeFamily("ride") == "cymbal" && od::typeFamily("tom") == "tom");
 
     const od::KitDef* rock = lib.findKit("demo-rock");

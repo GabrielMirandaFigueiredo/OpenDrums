@@ -1,9 +1,9 @@
-# OpenDrums (v0.2, protótipo)
+# OpenDrums (v0.5, protótipo)
 
 Instrumento VSTi de bateria baseado em samples, pensado para usar **kits open source** e permitir que o
 usuário **veja o kit** e **troque cada peça** por uma peça de outro kit.
 
-## Estado desta versão (v0.2)
+## Estado desta versão (v0.5)
 
 | Parte | Estado |
 |---|---|
@@ -161,3 +161,66 @@ third_party/nlohmann/json.hpp   (MIT)
 1. Compilar no Windows (VS2022) e testar numa DAW (Reaper, FL, Cubase).
 2. Conversor de kits DrumGizmo/AVL para `kit.json`, com as imagens das peças.
 3. Ampliar a biblioteca de grooves (por exemplo importando o Groove MIDI Dataset, CC BY 4.0, com atribuição).
+
+## Conversor de kits reais (`tools/convert_kit.py`)
+
+Converte kits open source em pastas de samples para o formato `kit.json` do OpenDrums.
+
+```
+python3 tools/convert_kit.py tools/recipes/big-rusty-drums.json <pasta-do-kit-original> kits/big-rusty-drums \
+        [--layers 6] [--rr 3] [--bits 16|24] [--jobs 8]
+```
+
+- Requer `ffmpeg` e Python 3. Lê FLAC/WAV, mistura os microfones com os pesos da *receita*, normaliza por peça,
+  escolhe até N camadas de velocity e M round-robins, grava WAV (16 bits com dither, ou 24) e gera as imagens cartoon.
+- A *receita* (`tools/recipes/*.json`) diz quais pastas viram cada peça/articulação, a mixagem de mics e a posição no palco.
+- Incluída: **Big Rusty Drums** (Karoryfer, CC0) — https://github.com/sfzinstruments/karoryfer.big-rusty-drums
+  (684 MB originais → ~118 MB convertidos, 282 samples). Baixe o repositório e rode o comando acima.
+- Kits CC-BY (DRSKit, MuldjordKit) exigem atribuição ao autor e receita/parser próprio (SFZ ARIA com macros: não suportado).
+- Limitações: mistura de mics fixa pela receita (sem CC), sem choke groups/hi-hat por CC do SFZ; todo o kit vai para a RAM.
+
+### Receita do Unruly Drums (CC0)
+`tools/recipes/unruly-drums.json` — https://github.com/sfzinstruments/karoryfer.unruly-drums
+(771 MB originais → 93 MB, 10 peças, 258 samples). O kit não tem toms: as caixas de 13", 14" e 22" fazem esse papel.
+Nas receitas, uma articulação pode ser `{ "dir": "s14", "prefix": "s14_center" }` (pasta com várias articulações misturadas,
+estrutura `<instrumento>/<mic>/rrN/arquivo`), e um microfone mono pode ser posicionado: `"ohl": { "w": 0.4, "pan": -0.7 }`.
+
+## Parser de kits DrumGizmo (`tools/convert_drumgizmo.py`)
+
+```
+python3 tools/convert_drumgizmo.py <pasta-do-kit> kits --id muldjord-kit --name "MuldjordKit" \
+        --license CC-BY-4.0 --author "Lars Muldjord" --source <url> \
+        --map "KdrumR=-,Tom4=floor,RideL=-,RideLBell=-,CrashL=crash1,CrashR=crash2,SnareRest=-"
+```
+
+- Aceita o formato nativo (`drumkit.xml` + XMLs de instrumento; cada `<sample power>` vira uma camada de velocity,
+  cada `<audiofile channel>` um microfone) **ou** a pasta `Samples/<Instr>/<N>-<Instr>-<Canal>.flac` (N=1 é o mais suave).
+- Mapeia instrumentos para as peças por nome (Kdrum, Snare, Tom1–4, Hihat*, Crash*, Ride*, China…); `--map` corrige.
+  Use `--map "Inst=-"` para ignorar um instrumento. Mic próprio = 1,0; overheads = 0,9; sala = 0,4; vazamento = 0,12; trigger = 0.
+- Grava a receita resolvida (`<out>/<id>.recipe.json`) para ajuste manual; `--no-convert` só gera a receita.
+- Testado com o MuldjordKit (CC-BY-4.0, **exige atribuição a Lars Muldjord**): 670 MB → 32 MB, 11 peças, 78 samples.
+- O caminho XML nativo foi testado só com um kit sintético que montei a partir do Muldjord, não com um kit nativo real
+  (drumgizmo.org está inacessível daqui). Kits com `<velocities>`/`<channelmap>` mais complexos podem precisar de ajustes.
+
+## Compilar e gerar instaladores (GitHub Actions)
+
+O workflow `.github/workflows/build.yml` compila no Windows, macOS e Linux a cada push/PR, roda os testes do núcleo
+e gera os instaladores como *artifacts* da execução (aba **Actions**):
+
+| Sistema | Arquivo | Instala |
+|---|---|---|
+| Windows x64 | `OpenDrums-<versão>-Windows-x64-setup.exe` (Inno Setup) | VST3 em `C:\Program Files\Common Files\VST3`, app independente, kits/grooves em `C:\ProgramData\OpenDrums` |
+| macOS (Intel + Apple Silicon) | `OpenDrums-<versão>-macOS-universal.dmg` com um `.pkg` | VST3 e AU em `/Library/Audio/Plug-Ins`, app em `/Applications`, conteúdo em `/Library/Application Support/OpenDrums` |
+| Linux x86_64 | `.deb` e `.tar.gz` | VST3 em `/usr/lib/vst3`, `opendrums` em `/usr/bin`, conteúdo em `/usr/share/opendrums` |
+
+Para publicar uma versão: `git tag v0.4.0 && git push --tags` — o workflow cria uma *Release* com os três instaladores.
+
+O plugin procura kits/grooves nesta ordem: variável `OPENDRUMS_KITS`/`OPENDRUMS_GROOVES` → pasta do usuário
+(`%APPDATA%\OpenDrums\Kits`, `~/Library/Application Support/OpenDrums/Kits`, `~/.config/OpenDrums/Kits`) se tiver conteúdo →
+pasta instalada para todos os usuários. Kits reais convertidos podem ser copiados para a pasta do usuário.
+
+Build local: `cmake -S . -B build && cmake --build build --config Release` (o CMake baixa o JUCE 8.0.6).
+Linux precisa de: `libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libfreetype6-dev libfontconfig1-dev libgl1-mesa-dev`.
+
+Observações: os instaladores não são assinados. No Windows o SmartScreen avisa ("Mais informações → Executar assim mesmo");
+no macOS o `.pkg` tem assinatura ad-hoc, então use botão direito → Abrir (ou assine com Developer ID e notarize).

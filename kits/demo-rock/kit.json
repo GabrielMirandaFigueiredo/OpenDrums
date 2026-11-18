@@ -1,0 +1,477 @@
+{
+  "format": 1,
+  "id": "demo-rock",
+  "name": "Demo Rock (sintético)",
+  "author": "OpenDrums (gerado por tools/make_demo_kits.py)",
+  "license": "CC0-1.0",
+  "description": "Kit sintético de demonstração: sons gerados por código, só para testar o plugin.",
+  "pieces": [
+    {
+      "id": "kick",
+      "type": "kick",
+      "label": "Bumbo 22\" (sintético)",
+      "diameter": 22,
+      "image": "images/kick.svg",
+      "gainDb": 0.0,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/kick_hit_L1_rr1.wav",
+                "samples/kick_hit_L1_rr2.wav",
+                "samples/kick_hit_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/kick_hit_L2_rr1.wav",
+                "samples/kick_hit_L2_rr2.wav",
+                "samples/kick_hit_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/kick_hit_L3_rr1.wav",
+                "samples/kick_hit_L3_rr2.wav",
+                "samples/kick_hit_L3_rr3.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "snare",
+      "type": "snare",
+      "label": "Caixa 14\" (sintético)",
+      "diameter": 14,
+      "image": "images/snare.svg",
+      "gainDb": -1.0,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/snare_hit_L1_rr1.wav",
+                "samples/snare_hit_L1_rr2.wav",
+                "samples/snare_hit_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/snare_hit_L2_rr1.wav",
+                "samples/snare_hit_L2_rr2.wav",
+                "samples/snare_hit_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/snare_hit_L3_rr1.wav",
+                "samples/snare_hit_L3_rr2.wav",
+                "samples/snare_hit_L3_rr3.wav"
+              ]
+            }
+          ]
+        },
+        "rimshot": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 127,
+              "files": [
+                "samples/snare_rimshot_L1_rr1.wav",
+                "samples/snare_rimshot_L1_rr2.wav"
+              ]
+            }
+          ]
+        },
+        "sidestick": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 127,
+              "files": [
+                "samples/snare_sidestick_L1_rr1.wav",
+                "samples/snare_sidestick_L1_rr2.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tom1",
+      "type": "tom",
+      "label": "Tom 10\" (sintético)",
+      "diameter": 10,
+      "image": "images/tom1.svg",
+      "gainDb": -1.0,
+      "pan": -0.25,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/tom1_hit_L1_rr1.wav",
+                "samples/tom1_hit_L1_rr2.wav",
+                "samples/tom1_hit_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/tom1_hit_L2_rr1.wav",
+                "samples/tom1_hit_L2_rr2.wav",
+                "samples/tom1_hit_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/tom1_hit_L3_rr1.wav",
+                "samples/tom1_hit_L3_rr2.wav",
+                "samples/tom1_hit_L3_rr3.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "tom2",
+      "type": "tom",
+      "label": "Tom 12\" (sintético)",
+      "diameter": 12,
+      "image": "images/tom2.svg",
+      "gainDb": -1.0,
+      "pan": 0.1,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/tom2_hit_L1_rr1.wav",
+                "samples/tom2_hit_L1_rr2.wav",
+                "samples/tom2_hit_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/tom2_hit_L2_rr1.wav",
+                "samples/tom2_hit_L2_rr2.wav",
+                "samples/tom2_hit_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/tom2_hit_L3_rr1.wav",
+                "samples/tom2_hit_L3_rr2.wav",
+                "samples/tom2_hit_L3_rr3.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "floor",
+      "type": "tom",
+      "label": "Surdo 16\" (sintético)",
+      "diameter": 16,
+      "image": "images/floor.svg",
+      "gainDb": -1.0,
+      "pan": 0.35,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/floor_hit_L1_rr1.wav",
+                "samples/floor_hit_L1_rr2.wav",
+                "samples/floor_hit_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/floor_hit_L2_rr1.wav",
+                "samples/floor_hit_L2_rr2.wav",
+                "samples/floor_hit_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/floor_hit_L3_rr1.wav",
+                "samples/floor_hit_L3_rr2.wav",
+                "samples/floor_hit_L3_rr3.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "hihat",
+      "type": "hihat",
+      "label": "Chimbal 14\" (sintético)",
+      "diameter": 14,
+      "image": "images/hihat.svg",
+      "gainDb": -4.0,
+      "pan": -0.35,
+      "articulations": {
+        "closed": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 50,
+              "files": [
+                "samples/hihat_closed_L1_rr1.wav",
+                "samples/hihat_closed_L1_rr2.wav",
+                "samples/hihat_closed_L1_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/hihat_closed_L2_rr1.wav",
+                "samples/hihat_closed_L2_rr2.wav",
+                "samples/hihat_closed_L2_rr3.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/hihat_closed_L3_rr1.wav",
+                "samples/hihat_closed_L3_rr2.wav",
+                "samples/hihat_closed_L3_rr3.wav"
+              ]
+            }
+          ]
+        },
+        "pedal": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 127,
+              "files": [
+                "samples/hihat_pedal_L1_rr1.wav",
+                "samples/hihat_pedal_L1_rr2.wav"
+              ]
+            }
+          ]
+        },
+        "open": {
+          "layers": [
+            {
+              "velMin": 51,
+              "velMax": 95,
+              "files": [
+                "samples/hihat_open_L1_rr1.wav",
+                "samples/hihat_open_L1_rr2.wav"
+              ]
+            },
+            {
+              "velMin": 96,
+              "velMax": 127,
+              "files": [
+                "samples/hihat_open_L2_rr1.wav",
+                "samples/hihat_open_L2_rr2.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "crash1",
+      "type": "crash",
+      "label": "Prato de ataque 16\" (sintético)",
+      "diameter": 16,
+      "image": "images/crash1.svg",
+      "gainDb": -5.0,
+      "pan": -0.5,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 80,
+              "files": [
+                "samples/crash1_hit_L1_rr1.wav",
+                "samples/crash1_hit_L1_rr2.wav"
+              ]
+            },
+            {
+              "velMin": 81,
+              "velMax": 127,
+              "files": [
+                "samples/crash1_hit_L2_rr1.wav",
+                "samples/crash1_hit_L2_rr2.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "crash2",
+      "type": "crash",
+      "label": "Prato de ataque 18\" (sintético)",
+      "diameter": 18,
+      "image": "images/crash2.svg",
+      "gainDb": -5.0,
+      "pan": 0.55,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 80,
+              "files": [
+                "samples/crash2_hit_L1_rr1.wav",
+                "samples/crash2_hit_L1_rr2.wav"
+              ]
+            },
+            {
+              "velMin": 81,
+              "velMax": 127,
+              "files": [
+                "samples/crash2_hit_L2_rr1.wav",
+                "samples/crash2_hit_L2_rr2.wav"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ride",
+      "type": "ride",
+      "label": "Prato de condução 20\" (sintético)",
+      "diameter": 20,
+      "image": "images/ride.svg",
+      "gainDb": -5.0,
+      "pan": 0.6,
+      "articulations": {
+        "hit": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 80,
+              "files": [
+                "samples/ride_hit_L1_rr1.wav",
+                "samples/ride_hit_L1_rr2.wav"
+              ]
+            },
+            {
+              "velMin": 81,
+              "velMax": 127,
+              "files": [
+                "samples/ride_hit_L2_rr1.wav",
+                "samples/ride_hit_L2_rr2.wav"
+              ]
+            }
+          ]
+        },
+        "bell": {
+          "layers": [
+            {
+              "velMin": 1,
+              "velMax": 127,
+              "files": [
+                "samples/ride_bell_L1_rr1.wav",
+                "samples/ride_bell_L1_rr2.wav"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "layout": [
+    {
+      "slot": "kick",
+      "piece": "kick",
+      "x": 0.5,
+      "y": 0.7
+    },
+    {
+      "slot": "snare",
+      "piece": "snare",
+      "x": 0.31,
+      "y": 0.63
+    },
+    {
+      "slot": "tom1",
+      "piece": "tom1",
+      "x": 0.43,
+      "y": 0.36
+    },
+    {
+      "slot": "tom2",
+      "piece": "tom2",
+      "x": 0.58,
+      "y": 0.36
+    },
+    {
+      "slot": "floor",
+      "piece": "floor",
+      "x": 0.73,
+      "y": 0.64
+    },
+    {
+      "slot": "hihat",
+      "piece": "hihat",
+      "x": 0.13,
+      "y": 0.47
+    },
+    {
+      "slot": "crash1",
+      "piece": "crash1",
+      "x": 0.26,
+      "y": 0.2
+    },
+    {
+      "slot": "crash2",
+      "piece": "crash2",
+      "x": 0.66,
+      "y": 0.16
+    },
+    {
+      "slot": "ride",
+      "piece": "ride",
+      "x": 0.87,
+      "y": 0.4
+    }
+  ]
+}

@@ -73,14 +73,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout OpenDrumsProcessor::createLa
         addB(s("mute"), n + " Mute", false);
         addB(s("solo"), n + " Solo", false);
         addB(s("phase"), n + " Fase", false);
-        addF(s("sendrv"), n + " Send Reverb", {0.0f, 1.0f, 0.01f}, 0.0f);
+        // Reverb send starts open (it was 0, so the room selector changed the scenery but nothing was heard).
+        // The send is squared in the mixer, so 0.5 is -12 dB. Overheads/cymbals and snare get more, kick less.
+        static const float kDefaultSendRv[od::kNumStrips] = {0.30f, 0.55f, 0.50f, 0.50f, 0.50f, 0.50f, 0.35f,
+                                                           0.45f, 0.45f, 0.45f, 0.40f, 0.40f, 0.35f, 0.35f};
+        addF(s("sendrv"), n + " Send Reverb", {0.0f, 1.0f, 0.01f}, kDefaultSendRv[i]);
         addF(s("sendpar"), n + " Send Paralelo", {0.0f, 1.0f, 0.01f}, 0.0f);
         addB(s("c_on"), n + " Comp On", false);
         addF(s("c_thr"), n + " Comp Threshold", {-40.0f, 0.0f, 0.1f}, -18.0f, "dB");
         addF(s("c_ratio"), n + " Comp Ratio", rangeWithCentre(1.0f, 20.0f, 4.0f, 0.1f), 4.0f);
         addF(s("c_makeup"), n + " Comp Makeup", {0.0f, 24.0f, 0.1f}, 0.0f, "dB");
         addF(s("c_rel"), n + " Comp Release", rangeWithCentre(20.0f, 1200.0f, 200.0f, 1.0f), 150.0f, "ms");
-        addB(s("c_fast"), n + " Comp Ataque Rápido", true);
+        addB(s("c_fast"), n + " Comp Ataque Rápido", false);
         addB(s("e_on"), n + " EQ On", false);
         addF(s("hf_f"), n + " HF Freq", rangeWithCentre(1500.0f, 16000.0f, 6000.0f, 10.0f), 8000.0f, "Hz");
         addF(s("hf_g"), n + " HF Ganho", {-15.0f, 15.0f, 0.1f}, 0.0f, "dB");

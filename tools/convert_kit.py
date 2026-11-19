@@ -55,21 +55,57 @@ def write_wav(path: Path, x: np.ndarray, bits: int):
 
 def scan_hits(root: Path, prefix: str = None):
     """{(vl, rr): {mic: path}} for one articulation.
-    Layouts understood: <root>/<mic>/<file> (Big Rusty) and <root>/<mic>/rrN/<file> (Unruly).
-    `prefix` keeps only files named <prefix>[_vlN][_rrN].<ext> (when one folder holds several articulations)."""
+    Layouts understood: <root>/<mic>/<file> (Big Rusty), <root>/<mic>/rrN/<file> (Unruly) and <root>/<file> (single mic, e.g. VCSL).
+    `prefix` keeps only files named <prefix>[_vN|_vlN][_rrN][_Suffix].<ext> (when one folder holds several articulations)."""
     hits = {}
-    pat = re.compile(r"^" + re.escape(prefix) + r"(_vl\d+)?(_rr\d+)?\.(flac|wav)$", re.I) if prefix else None
+    pat = re.compile(r"^" + re.escape(prefix) + r"(_vl?\d+)?(_rr\d+)?(_[A-Za-z]+)?\.(flac|wav)$", re.I) if prefix else None
+
+    def add(mic, f):
+        if not f.is_file() or f.suffix.lower() not in (".flac", ".wav") or (pat and not pat.match(f.name)):
+            return
+        vl = re.search(r"_vl?(\d+)(?=_|\.)", f.name)
+        rr = re.search(r"_rr(\d+)", f.name)
+        key = (int(vl.group(1)) if vl else 1, int(rr.group(1)) if rr else 1)
+        hits.setdefault(key, {})[mic] = f
+
+    for f in root.iterdir():
+        add("main", f)
     for mic_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         for f in mic_dir.rglob("*"):
-            if not f.is_file() or f.suffix.lower() not in (".flac", ".wav"):
-                continue
-            if pat and not pat.match(f.name):
-                continue
-            vl = re.search(r"vl(\d+)", f.name)
-            rr = re.search(r"rr(\d+)", f.name)
-            key = (int(vl.group(1)) if vl else 1, int(rr.group(1)) if rr else 1)
-            hits.setdefault(key, {})[mic_dir.name] = f
+            add(mic_dir.name, f)
     return hits
+
+
+def percussion_svg(look, d, colors, label):
+    """Pictures for hand percussion: bell, tambourine, shaker, triangle."""
+    import make_demo_kits as art
+    w = d * 10
+    c, rim, metal = colors["shell"], colors["rim"], colors["metal"]
+    if look == "bell":      # cowbell / agogo
+        h = w * 0.8
+        body = (f'<path d="M{w*0.18:.1f} {h*0.9:.1f} L{w*0.30:.1f} {h*0.12:.1f} L{w*0.70:.1f} {h*0.12:.1f} L{w*0.82:.1f} {h*0.9:.1f} Z" fill="{metal}"/>'
+                f'<path d="M{w*0.30:.1f} {h*0.12:.1f} L{w*0.70:.1f} {h*0.12:.1f} L{w*0.74:.1f} {h*0.3:.1f} L{w*0.26:.1f} {h*0.3:.1f} Z" fill="#ffffff" opacity="0.25"/>'
+                f'<ellipse cx="{w/2:.1f}" cy="{h*0.9:.1f}" rx="{w*0.32:.1f}" ry="{h*0.06:.1f}" fill="#3a2a10"/>')
+        return art.svg_wrap(w, h, body, label)
+    if look == "tambourine":
+        body = f'<circle cx="{w/2:.1f}" cy="{w/2:.1f}" r="{w/2-4:.1f}" fill="{c}"/><circle cx="{w/2:.1f}" cy="{w/2:.1f}" r="{w/2-12:.1f}" fill="{colors["head"]}"/>'
+        for i in range(6):
+            import math
+            a = i * math.pi / 3
+            body += f'<circle cx="{w/2+math.cos(a)*(w/2-8):.1f}" cy="{w/2+math.sin(a)*(w/2-8):.1f}" r="{w*0.045:.1f}" fill="{metal}" stroke="#444" stroke-width="1.5"/>'
+        return art.svg_wrap(w, w, body, label)
+    if look == "shaker":
+        h = w * 0.55
+        body = (f'<rect x="{w*0.06:.1f}" y="{h*0.15:.1f}" width="{w*0.88:.1f}" height="{h*0.7:.1f}" rx="{h*0.35:.1f}" fill="{c}"/>'
+                f'<rect x="{w*0.06:.1f}" y="{h*0.15:.1f}" width="{w*0.88:.1f}" height="{h*0.7:.1f}" rx="{h*0.35:.1f}" fill="none" stroke="{rim}" stroke-width="4"/>'
+                + "".join(f'<circle cx="{w*(0.2+0.12*i):.1f}" cy="{h*(0.4+0.2*(i%2)):.1f}" r="{h*0.07:.1f}" fill="{metal}"/>' for i in range(6)))
+        return art.svg_wrap(w, h, body, label)
+    if look == "triangle":
+        h = w * 0.85
+        body = (f'<path d="M{w/2:.1f} {h*0.08:.1f} L{w*0.92:.1f} {h*0.88:.1f} L{w*0.08:.1f} {h*0.88:.1f} Z" fill="none" stroke="{metal}" stroke-width="{w*0.07:.1f}" stroke-linejoin="round"/>'
+                f'<path d="M{w/2:.1f} {h*0.08:.1f}" stroke="#555"/>')
+        return art.svg_wrap(w, h, body, label)
+    return art.svg_cymbal(d, metal, label)
 
 
 def pick_layers(vls, max_layers):
@@ -102,10 +138,16 @@ def main():
     ap.add_argument("--rr", type=int, default=3)
     ap.add_argument("--bits", type=int, default=16, choices=(16, 24))
     ap.add_argument("--jobs", type=int, default=8)
+    ap.add_argument("--extra-source", dest="extra", action="append", default=[], metavar="NAME=DIR",
+                    help="extra sample source (a piece spec picks it with \"src\": \"NAME\")")
     a = ap.parse_args()
 
     rec = json.loads(Path(a.recipe).read_text(encoding="utf-8"))
     src = Path(a.source) / rec.get("samplesDir", "Samples")
+    sources = {"main": src}
+    for kv in a.extra:
+        name, _, d = kv.partition("=")
+        sources[name] = Path(d)
     out = Path(a.out) / rec["id"]
     colors = rec["colors"]
     pieces, layout, total = [], [], 0
@@ -122,7 +164,7 @@ def main():
                 if "hits" in spec:  # resolved by convert_drumgizmo.py: [{"vl":1,"rr":1,"mics":{"AmbL":"/abs/file"}}]
                     hits = {(h["vl"], h.get("rr", 1)): {m: Path(f) for m, f in h["mics"].items()} for h in spec["hits"]}
                 else:
-                    hits = scan_hits(src / spec["dir"], spec.get("prefix"))
+                    hits = scan_hits(sources[spec.get("src", "main")] / spec["dir"], spec.get("prefix"))
                 if not hits:
                     raise SystemExit(f"{pc['slot']}/{art_name}: nenhum sample em {spec.get('dir')} (prefixo {spec.get('prefix')})")
                 vls = {vl for vl, _ in hits}
@@ -174,7 +216,10 @@ def main():
                 arts_out[art_name] = {"layers": layers}
 
             t, d, lab = pc["type"], pc["diameter"], pc["label"]
-            if t == "kick":
+            look = pc.get("look")
+            if look:
+                svg = percussion_svg(look, d, colors, lab)
+            elif t == "kick":
                 svg = art.svg_kick(d, colors["shell"], colors["rim"], colors["head"], lab)
             elif t in ("snare", "tom"):
                 svg = art.svg_drum(d, 5.5 if t == "snare" else d * 0.85, colors["shell"], colors["rim"], colors["head"], 8 if t == "snare" else 6, lab, t == "snare")

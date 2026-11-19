@@ -29,6 +29,21 @@ OpenDrumsEditor::OpenDrumsEditor(OpenDrumsProcessor& p)
     addAndMakeVisible(masterKnob_);
     masterAtt_ = std::make_unique<ui::SliderAtt>(proc_.apvts, "master", masterKnob_);
 
+    // "Ambiente": return level of the reverb bus, right where the room is chosen
+    ambKnob_.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    ambKnob_.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    ambKnob_.setRotaryParameters(juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, true);
+    ambKnob_.setColour(ui::kKnobColourId, ui::kBlue);
+    ambKnob_.setPopupDisplayEnabled(true, true, nullptr);
+    ambKnob_.setTooltip(T("Volume da ambiência (retorno do reverb da sala escolhida)"));
+    addAndMakeVisible(ambKnob_);
+    ambAtt_ = std::make_unique<ui::SliderAtt>(proc_.apvts, "rv_ret", ambKnob_);
+    ambLabel_.setText(T("AMBIENTE"), juce::dontSendNotification);
+    ambLabel_.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    ambLabel_.setColour(juce::Label::textColourId, ui::kTextDim);
+    ambLabel_.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(ambLabel_);
+
     statusLabel_.setJustificationType(juce::Justification::centredRight);
     statusLabel_.setColour(juce::Label::textColourId, ui::kTextDim);
     addAndMakeVisible(statusLabel_);
@@ -135,7 +150,7 @@ void OpenDrumsEditor::showView(int view)
     for (int i = 0; i < 4; ++i)
         tabs_[(size_t) i].setToggleState(i == view, juce::dontSendNotification);
     const bool kit = view == 0;
-    for (juce::Component* c : std::initializer_list<juce::Component*>{&kitBox_, &roomBox_, &foldersButton_, &swapButton_, &resetButton_, &pieceLabel_, &kitView_})
+    for (juce::Component* c : std::initializer_list<juce::Component*>{&kitBox_, &roomBox_, &ambKnob_, &ambLabel_, &foldersButton_, &swapButton_, &resetButton_, &pieceLabel_, &kitView_})
         c->setVisible(kit);
     mixView_.setVisible(view == 1);
     groovesView_.setVisible(view == 2);
@@ -214,6 +229,9 @@ void OpenDrumsEditor::resized()
     foldersButton_.setBounds(bar.removeFromLeft(130).reduced(0, 3));
     roomBox_.setBounds(bar.removeFromRight(200).reduced(0, 3));
     bar.removeFromRight(8);
+    ambKnob_.setBounds(bar.removeFromRight(34).reduced(1, 0));
+    ambLabel_.setBounds(bar.removeFromRight(70));
+    bar.removeFromRight(8);
     bar.removeFromRight(0);
     auto bottom = kit.removeFromBottom(44);
     resetButton_.setBounds(bottom.removeFromRight(130).reduced(0, 7));
@@ -282,7 +300,7 @@ void OpenDrumsEditor::updateSelectionInfo()
     kitView_.setSelectedSlot(hasSlot ? selectedSlot_ : juce::String());
 
     if (!hasSlot) {
-        pieceLabel_.setText(T("Clique numa peça para tocar. Botão direito (ou duplo clique) para trocar."),
+        pieceLabel_.setText(T("Clique numa peça para tocar. Use o ícone ⇄ no canto de cada peça (ou o botão “Trocar peça…”) para trocá-la por outra de qualquer kit."),
                             juce::dontSendNotification);
         return;
     }

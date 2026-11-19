@@ -175,6 +175,28 @@ int KitView::itemAt(juce::Point<float> p) const
     return -1;
 }
 
+// The swap badge sits on the top-right corner of every piece. At rest it is a small round icon; on the hovered or
+// selected piece it grows into a pill that says what it does.
+juce::Rectangle<float> KitView::badgeRect(size_t i, bool expanded) const
+{
+    const auto b = toJuce(items_[i].bounds);
+    const float w = expanded ? 84.0f : 22.0f, h = 22.0f;
+    float x = b.getRight() - 12.0f - (expanded ? w - 22.0f : 0.0f);
+    x = juce::jlimit(2.0f, static_cast<float>(getWidth()) - w - 2.0f, x);
+    const float y = juce::jlimit(2.0f, static_cast<float>(getHeight()) - h - 2.0f, b.getY() - 12.0f);
+    return {x, y, w, h};
+}
+
+int KitView::badgeAt(juce::Point<float> p) const
+{
+    for (int i = static_cast<int>(items_.size()) - 1; i >= 0; --i) {
+        const bool open = items_[static_cast<size_t>(i)].view.slot == selected_.toStdString() || i == hovered_ || i == hoveredBadge_;
+        if (badgeRect(static_cast<size_t>(i), open).expanded(2.0f).contains(p))
+            return i;
+    }
+    return -1;
+}
+
 void KitView::paint(juce::Graphics& g)
 {
     const auto area = getLocalBounds().toFloat();
@@ -236,15 +258,49 @@ void KitView::paint(juce::Graphics& g)
         g.drawText(displayNameForSlot(juce::String(item.view.slot)), caption.toNearestInt(),
                    juce::Justification::centred);
 
-        if (swapped_.contains(juce::String(item.view.slot))) { // piece from another kit
+        if (swapped_.contains(juce::String(item.view.slot))) { // piece from another kit: dot on the top-left corner
             g.setColour(kAccent);
-            g.fillEllipse(bounds.getRight() - 6.0f, bounds.getY() - 2.0f, 9.0f, 9.0f);
+            g.fillEllipse(bounds.getX() - 4.0f, bounds.getY() - 4.0f, 9.0f, 9.0f);
+        }
+    }
+
+    // Third pass: the swap badges, on top of everything.
+    for (size_t i = 0; i < items_.size(); ++i) {
+        const bool isSelected = items_[i].view.slot == selected_.toStdString();
+        const bool open = isSelected || static_cast<int>(i) == hovered_ || static_cast<int>(i) == hoveredBadge_;
+        const auto r = badgeRect(i, open);
+        const bool direct = static_cast<int>(i) == hoveredBadge_;
+        g.setColour(juce::Colour(0xff14161a).withAlpha(0.35f));
+        g.fillRoundedRectangle(r.translated(0.0f, 1.5f), 11.0f);                          // drop shadow
+        g.setColour(direct ? kAccent : (open ? juce::Colour(0xff2a2f3a) : juce::Colour(0xff2a2f3a).withAlpha(0.88f)));
+        g.fillRoundedRectangle(r, 11.0f);
+        g.setColour(open || direct ? kAccent : juce::Colour(0xffe8a33d).withAlpha(0.8f));
+        g.drawRoundedRectangle(r, 11.0f, 1.5f);
+
+        // two arrows, one each way
+        const auto ic = juce::Rectangle<float>(r.getX() + 4.0f, r.getY() + 4.0f, 14.0f, 14.0f);
+        g.setColour(direct ? juce::Colour(0xff14161a) : kAccent);
+        g.drawArrow(juce::Line<float>(ic.getX(), ic.getY() + 4.0f, ic.getRight(), ic.getY() + 4.0f), 1.6f, 5.0f, 4.5f);
+        g.drawArrow(juce::Line<float>(ic.getRight(), ic.getBottom() - 4.0f, ic.getX(), ic.getBottom() - 4.0f), 1.6f, 5.0f, 4.5f);
+        if (open) {
+            g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+            g.drawText(T("Trocar"), juce::Rectangle<float>(r.getX() + 24.0f, r.getY(), r.getWidth() - 28.0f, r.getHeight()),
+                       juce::Justification::centredLeft);
         }
     }
 }
 
 void KitView::mouseDown(const juce::MouseEvent& e)
 {
+    const int badge = badgeAt(e.position);
+    if (badge >= 0) { // the swap badge: select the piece and open the menu, without playing it
+        const juce::String slot(items_[static_cast<size_t>(badge)].view.slot);
+        selected_ = slot;
+        if (onSlotSelected) onSlotSelected(slot);
+        if (onSlotMenuRequested) onSlotMenuRequested(slot);
+        repaint();
+        return;
+    }
     const int i = itemAt(e.position);
     if (i < 0)
         return;
@@ -272,17 +328,20 @@ void KitView::mouseDoubleClick(const juce::MouseEvent& e)
 void KitView::mouseMove(const juce::MouseEvent& e)
 {
     const int i = itemAt(e.position);
-    if (i != hovered_) {
+    const int badge = badgeAt(e.position);
+    if (i != hovered_ || badge != hoveredBadge_) {
         hovered_ = i;
-        setMouseCursor(i >= 0 ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
+        hoveredBadge_ = badge;
+        setMouseCursor(i >= 0 || badge >= 0 ? juce::MouseCursor::PointingHandCursor : juce::MouseCursor::NormalCursor);
         repaint();
     }
 }
 
 void KitView::mouseExit(const juce::MouseEvent&)
 {
-    if (hovered_ != -1) {
+    if (hovered_ != -1 || hoveredBadge_ != -1) {
         hovered_ = -1;
+        hoveredBadge_ = -1;
         repaint();
     }
 }

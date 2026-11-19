@@ -6,7 +6,5 @@ dist/
 __pycache__/
 *.pyc
 .DS_Store
-# converted real kits are big: generate them with tools/convert_kit.py instead of committing
-kits/big-rusty-drums/
-kits/unruly-drums/
-kits/muldjord-kit/
+# kits/ is generated: tools/make_demo_kits.py + tools/make_electronic_kits.py (synthetic) and tools/build_real_kits.sh (real kits)
+kits/

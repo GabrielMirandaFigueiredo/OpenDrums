@@ -12,7 +12,7 @@ Understands two layouts:
 
 Instruments are mapped to OpenDrums slots by name (Kdrum/Kick, Snare, Tom1..4, Hihat*, Crash*, Ride*, China, Splash...).
 Use --map "Instrument=slot" (slot = kick, snare, tom1.., hihat:closed, hihat:open, ride:bell ... or '-' to ignore) to override.
-The microphones are mixed with weights by channel name (own close mic 1.0, overheads 0.9, room 0.4, bleed 0.12, triggers 0).
+The microphones are mixed with weights by channel name (own close mic 1.0, overheads 0.9, room 0.4, other instruments' mics 0).
 The result is a resolved recipe that tools/convert_kit.py renders; --dump-recipe keeps it so it can be edited by hand.
 """
 import argparse, json, re, subprocess, sys, xml.etree.ElementTree as ET
@@ -23,7 +23,6 @@ AUDIO = (".wav", ".flac")
 # instrument-name regex -> (slot, articulation, type, diameter, label, pos)
 RULES = [
     (r"^(kdrum|kick|bd|bass)", ("kick", "hit", "kick", 22, "Bumbo", (0.5, 0.7))),
-    (r"^snare.*(rest|ghost)", ("snare", "ghost", "snare", 14, "Caixa", (0.3, 0.63))),
     (r"^snare.*(side|stick)", ("snare", "sidestick", "snare", 14, "Caixa", (0.3, 0.63))),
     (r"^snare.*rim", ("snare", "rimshot", "snare", 14, "Caixa", (0.3, 0.63))),
     (r"^snare", ("snare", "hit", "snare", 14, "Caixa", (0.3, 0.63))),
@@ -46,6 +45,10 @@ RULES = [
 SLOT_INFO = {r[1][0]: r[1] for r in RULES}
 
 
+# variants that only duplicate a main articulation (whiskers/brushes, shank hits, chained cymbals, rests...): skipped unless mapped by hand
+SKIP = re.compile(r"whisker|circle|chain|without_contact|semi|rest|ghost|shank", re.I)
+
+
 def classify(name, override):
     if name in override:
         o = override[name]
@@ -54,6 +57,8 @@ def classify(name, override):
         slot, _, art = o.partition(":")
         info = SLOT_INFO.get(slot) or ("tom", "hit", "tom", 14, slot, (0.5, 0.4))
         return (slot, art or info[1]) + tuple(info[2:])
+    if SKIP.search(name):
+        return None
     for rx, info in RULES:
         if re.search(rx, name.lower()):
             return info
@@ -64,7 +69,7 @@ def mic_weight(channel, instrument):
     c, i = channel.lower(), instrument.lower()
     if re.search(r"trig|click|room.*mono", c):
         return 0.0, 0.0
-    key = re.sub(r"[lr]?(bell)?$", "", i)  # RideLBell -> ride, KdrumL -> kdrum (digits stay: Tom1 only matches Tom1)
+    key = re.sub(r"[lr]?(bell)?$", "", i.split("_")[0])  # RideLBell -> ride, KdrumL -> kdrum (digits stay: Tom1 only matches Tom1)
     key = {"kdrum": "kdrum", "kick": "kick"}.get(key, key)
     if "oh" in c or "overhead" in c:
         w = 0.9
@@ -77,7 +82,7 @@ def mic_weight(channel, instrument):
         elif "snare" in i and "snare" in c and not ("top" in c):
             w = 0.9
     else:
-        w = 0.12  # bleed of other instruments
+        w = 0.0  # bleed of other instruments: not decoded at all (faster, cleaner)
     pan = 0.0
     if re.search(r"(^|[^a-z])l$|left|amb.?l|oh.?l", c) and "bell" not in c:
         pan = -0.7

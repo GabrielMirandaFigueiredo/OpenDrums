@@ -80,7 +80,7 @@ int main()
     m.clear();
     m.addEvent(juce::MidiMessage::noteOn(10, 36, (juce::uint8) 110), 0);
     out = run(20, m);
-    CHECK(peakOf(out, 0) < 1e-4f);
+    CHECK(peakOf(out, 0) < 0.05f); // only the reverb return reaches the master
     p.apvts.getParameter(pid::strip(0, "mute"))->setValueNotifyingHost(0.0f);
 
     // MIDI channel filter: kick only on channel 3 -> a note on channel 10 is ignored
@@ -142,6 +142,13 @@ int main()
     CHECK(q.isFavorite("Funk/4-4 90bpm/02 Verso/Verso 01.mid"));
     CHECK(q.getNoteOverrides().count("kick") == 1);
     if (q.getRig()) std::printf("note 60 mapped after override: %d\n", q.getRig()->notes[60].slot != nullptr);
+
+    // defaults: reverb sends open on every strip (the room must be audible out of the box), compressor attack slow
+    for (int i = 0; i < od::kNumStrips; ++i)
+    {
+        CHECK(p.apvts.getParameter(pid::strip(i, "sendrv"))->getDefaultValue() > 0.2f);
+        CHECK(p.apvts.getRawParameterValue(pid::strip(i, "c_fast"))->load() < 0.5f);
+    }
 
     std::printf(failures == 0 ? "PROCESSOR TEST: ALL PASSED\n" : "PROCESSOR TEST: %d FAILED\n", failures);
     return failures == 0 ? 0 : 1;

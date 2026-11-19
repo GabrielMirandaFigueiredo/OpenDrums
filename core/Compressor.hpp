@@ -13,7 +13,7 @@ struct CompParams {
     float ratio = 4.0f;         // 1 .. 20
     float makeupDb = 0.0f;      // 0 .. 24
     float releaseMs = 150.0f;   // 20 .. 1200
-    bool fastAttack = true;     // fast ~ 1 ms, slow ~ 30 ms
+    bool fastAttack = false;    // fast ~ 1 ms, slow ~ 30 ms
     float kneeDb = 6.0f;
 
     bool operator==(const CompParams& o) const {

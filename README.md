@@ -1,9 +1,9 @@
-# OpenDrums (v0.5, protótipo)
+# OpenDrums (v0.6, protótipo)
 
 Instrumento VSTi de bateria baseado em samples, pensado para usar **kits open source** e permitir que o
 usuário **veja o kit** e **troque cada peça** por uma peça de outro kit.
 
-## Estado desta versão (v0.5)
+## Estado desta versão (v0.6)
 
 | Parte | Estado |
 |---|---|
@@ -224,3 +224,27 @@ Linux precisa de: `libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxc
 
 Observações: os instaladores não são assinados. No Windows o SmartScreen avisa ("Mais informações → Executar assim mesmo");
 no macOS o `.pkg` tem assinatura ad-hoc, então use botão direito → Abrir (ou assine com Developer ID e notarize).
+
+## Kits incluídos
+
+| Kit | Tipo | Licença | Como entra |
+|---|---|---|---|
+| Demo Rock, Demo Tight | sintéticos de teste | CC0 | gerados por `tools/make_demo_kits.py` (o workflow roda) |
+| Eletrônico 808, Eletrônico 909 | bateria eletrônica sintetizada | CC0 | gerados por `tools/make_electronic_kits.py` (o workflow roda) |
+| DRSKit | acústico de estúdio, multi-microfone (Michael Wolff) | CC-BY-4.0 | baixado e convertido no release |
+| MuldjordKit | acústico de estúdio, multi-microfone (Lars Muldjord) | CC-BY-4.0 | baixado e convertido no release |
+| Big Rusty Drums | acústico com caráter (Karoryfer) | CC0 | baixado e convertido no release |
+| Unruly Drums | acústico "sujo" (Karoryfer) | CC0 | baixado e convertido no release |
+| Percussão: Cajón, Bongôs e Congas | percussão real (Gogodze Phu I + VCSL) | CC0 | baixado e convertido no release |
+
+`tools/build_real_kits.sh <pasta-de-downloads> kits` faz o mesmo localmente (precisa de git, ffmpeg, python3 e numpy; ~6 GB de download).
+No GitHub, a conversão roda no job **Real kits** ao publicar uma tag `v*` (ou em *Run workflow* manual) e o resultado entra nos três instaladores.
+Os kits eletrônicos são sons sintetizados do zero com as receitas clássicas (seno varrido, tom + ruído, osciladores quadrados
+desafinados); não são gravações de equipamentos Roland.
+
+## Ambiência (reverb)
+A sala escolhida no Kit view agora soa de imediato: os *sends* de reverb de cada canal começam abertos (antes eram 0) e há um
+botão **AMBIENTE** ao lado da sala, que controla o retorno do reverb. O compressor de cada canal começa com *Fast attack* desligado.
+
+Para rodar localmente sem o GitHub: `python tools/make_demo_kits.py kits && python tools/make_electronic_kits.py kits` (precisa de numpy e scipy);
+a pasta `kits/` não é versionada.

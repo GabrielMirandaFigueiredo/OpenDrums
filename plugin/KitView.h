@@ -14,7 +14,7 @@
 // (so a swapped-in piece looks like the piece that is actually sounding), plus its stand,
 // feet and, for the bass drum, the pedal. Pieces animate when they are hit (see triggerHit).
 //   left click  : select the slot and play it
-//   right click / double click : ask for the "swap piece" menu
+//   the "Trocar" badge on every piece (or right click / double click) : open the "swap piece" menu
 // All geometry and animation curves live in core/KitGeometry (shared with the preview tool).
 class KitView : public juce::Component, private juce::Timer
 {
@@ -64,6 +64,9 @@ private:
     juce::StringArray swapped_;
     juce::String selected_;
     int hovered_ = -1;
+    int hoveredBadge_ = -1;
+    juce::Rectangle<float> badgeRect(size_t itemIndex, bool expanded) const;
+    int badgeAt(juce::Point<float> p) const;
     int room_ = -1;
     std::vector<od::geo::Prim> scene_;
     double lastTickMs_ = 0.0;

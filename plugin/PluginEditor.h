@@ -39,7 +39,9 @@ private:
 
     std::array<juce::TextButton, 4> tabs_;
     juce::Label statusLabel_;
-    juce::Slider masterKnob_;
+    juce::Slider masterKnob_, ambKnob_;
+    juce::Label ambLabel_;
+    std::unique_ptr<ui::SliderAtt> ambAtt_;
     std::unique_ptr<ui::SliderAtt> masterAtt_;
 
     // kit page

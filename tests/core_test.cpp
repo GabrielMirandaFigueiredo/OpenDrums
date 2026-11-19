@@ -488,6 +488,24 @@ int main(int argc, char** argv) {
         };
         auto near = [](float a, float b, float tol = 0.002f) { return std::fabs(a - b) < tol; };
 
+        { // the reverb send makes a room tail; with the send at 0 there is none (default sends used to be 0 = silent room)
+            auto tail = [&](float send) {
+                Harness h;
+                h.p.reverb.rv.room = 2;
+                h.p.reverb.returnDb = -8.0f;
+                h.p.strip[1].sendReverb = send;
+                for (int i = 0; i < 100; ++i) { h.inL[1][static_cast<size_t>(i)] = 0.8f; h.inR[1][static_cast<size_t>(i)] = 0.8f; }
+                h.run();
+                double e = 0.0;
+                for (int i = 9000; i < Harness::N; ++i) e += static_cast<double>(h.at(0, i)) * h.at(0, i); // > 0.18 s after a 2 ms click
+                return e;
+            };
+            const double wet = tail(0.55f), dry = tail(0.0f);
+            std::printf("  reverb send: tail energy %.3e with send 0.55, %.3e with send 0\n", wet, dry);
+            CHECK(wet > 1e-6);
+            CHECK(wet > dry * 100.0 + 1e-9);
+        }
+
         {
             Harness h;
             h.fill(0, 0.5f);
